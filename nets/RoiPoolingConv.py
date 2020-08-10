@@ -15,7 +15,7 @@ class RoiPoolingConv(Layer):
             要使用的池化层的大小。pool_size = 7 将会产生 7x7 的池化
         num_rois：将使用的 ROI 数目
     输入规格：
-        一个思维张量的列表 [X_img,X_roi] ：
+        一个张量的列表 [X_img,X_roi] ：
         X_img：
             如果使用Theano作为后端，则X_img的张量形式如下：
             `(1, channels, rows, cols)` if dim_ordering='th'
@@ -49,6 +49,7 @@ class RoiPoolingConv(Layer):
 
     # 设定compute_output_shape方法，输入为input_shape向量，输出依次为None，rois数量，池化大小，池化大小，nb_channels
     def compute_output_shape(self,input_shape):
+        # 返回
         return None,self.num_rois,self.pool_size,self.pool_size,self.nb_channels
     
     # 
@@ -86,8 +87,8 @@ class RoiPoolingConv(Layer):
         final_output = K.concatenate(outputs,axis=0)
         # 将输出reshape成(1, self.num_rois, self.pool_size, self.pool_size, self.nb_channels)形状
         final_output = K.reshape(final_output,(1, self.num_rois, self.pool_size, self.pool_size, self.nb_channels))
-        # 进行纬度交换，这里没有顺序交换,可以注释掉
-        final_output = K.permute_dimensions(final_output,(0, 1, 2, 3, 4))
+        # 进行维度交换，这里没有顺序交换,可以注释掉
+        # final_output = K.permute_dimensions(final_output,(0, 1, 2, 3, 4))
 
         return final_output
 
