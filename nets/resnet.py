@@ -191,13 +191,13 @@ def ResNet50(inputs):
     # 记录输入
     img_input = inputs
 
-    # 先对输入进行padding，由于有三次步长为2的卷积，所以采用(3,3)padding,网络总共将输入的宽高压缩4次
+    # 先对输入进行padding，有三次步长为2的卷积，第一次所用卷积核为(7,7),所以采用(3,3)padding,网络总共将输入的宽高压缩4次
     x = ZeroPadding2D((3, 3))(img_input)
-    # 普通卷积，BN，激活操作
+    # 普通卷积，BN，激活操作，进行特征图压缩 -1
     x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
     x = BatchNormalization(name='bn_conv1')(x)
     x = Activation('relu')(x)
-    # 最大池化，注意此时采用了same padding，故上面的zeropadding只需要采用(3,3)padding
+    # 最大池化，注意此时采用了same padding，进行特征图压缩 -2
     x = MaxPooling2D((3, 3), strides=(2, 2), padding="same")(x)
  
     # 一个完整的stage，该stage未进行下采样
@@ -205,13 +205,13 @@ def ResNet50(inputs):
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
 
-    # 一个完整的stage，该stage进行了下采样
+    # 一个完整的stage，该stage进行了下采样，进行特征图压缩 -3
     x = conv_block(x, 3, [128, 128, 512], stage=3, block='a')
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='b')
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='c')
     x = identity_block(x, 3, [128, 128, 512], stage=3, block='d')
 
-    # 一个完整的stage，该stage进行了下采样
+    # 一个完整的stage，该stage进行了下采样，进行特征图压缩 -4
     x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a')
     x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b')
     x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c')
@@ -293,12 +293,12 @@ def conv_block_td(input_tensor, kernel_size, filters, stage, block, input_shape,
 
 def classifier_layers(x, input_shape, trainable=False):
     
-    # 采用一个卷积下采样层和两个恒等映射
+    # 采用一个卷积下采样层和两个恒等映射，第五次压缩宽高
     x = conv_block_td(x, 3, [512, 512, 2048], stage=5, block='a', input_shape=input_shape, strides=(2, 2), trainable=trainable)
     x = identity_block_td(x, 3, [512, 512, 2048], stage=5, block='b', trainable=trainable)
     x = identity_block_td(x, 3, [512, 512, 2048], stage=5, block='c', trainable=trainable)
 
-    # 
+    # 进行平均池化，进一步压缩特征
     x = TimeDistributed(AveragePooling2D((7, 7)), name='avg_pool')(x)
 
     return x
